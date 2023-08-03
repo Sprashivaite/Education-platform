@@ -1,16 +1,23 @@
-import express, { Request, Response } from "express";
-import Class from "../models/classModel.js";
+import { Router } from "express";
+import { requireAuth } from "../controllers/userController.js";
+import {
+  addComment,
+  addLinkToClass,
+  addLinkToFile,
+  getClass,
+  getClasses,
+} from "../controllers/classController.js";
 
-const router = express.Router();
+const router = Router();
 
-router.get("/:courseId/classes", async (req: Request, res: Response) => {
-  const { courseId } = req.params;
-  try {
-    const classes = await Class.find({ courseId });
-    res.json(classes);
-  } catch (error) {
-    res.status(500).json({ message: "Ошибка сервера" });
-  }
-});
+router.get("/:courseId/classes", requireAuth, getClasses);
+
+router.get("/:id", requireAuth, getClass);
+
+router.post("/:id/comments", requireAuth, addComment);
+
+router.post("/:classId/links", requireAuth, addLinkToClass);
+
+router.post("/:classId/links/files", requireAuth, addLinkToFile);
 
 export default router;

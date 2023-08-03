@@ -1,21 +1,21 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { Form, Input, Button } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
-import { toast } from "react-toastify";
+import { regUser } from "../pages/RegistrationPage/service";
 
 const RegisterForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async ({
+    username,
+    password,
+  }: {
+    username: string;
+    password: string;
+  }) => {
     setLoading(true);
     try {
-      await axios.post("/auth/register", values);
-      toast.success("Registration successful!", { position: "top-right" });
-    } catch (error: any) {
-      toast.error(error.response.data, {
-        position: "top-right",
-      });
+      await regUser(username, password);
     } finally {
       setLoading(false);
     }
@@ -35,23 +35,17 @@ const RegisterForm: React.FC = () => {
           },
         ]}
       >
-        <Input
-          prefix={<UserOutlined className="site-form-item-icon" />}
-          placeholder="Username"
-        />
+        <Input prefix={<UserOutlined />} placeholder="Username" />
       </Form.Item>
       <Form.Item
         name="password"
         rules={[{ required: true, message: "Пожалуйста, введите пароль" }]}
       >
-        <Input.Password
-          prefix={<LockOutlined className="site-form-item-icon" />}
-          placeholder="Password"
-        />
+        <Input.Password prefix={<LockOutlined />} placeholder="Password" />
       </Form.Item>
       <Form.Item>
         <Button type="primary" htmlType="submit" loading={loading}>
-          Register
+          Регистрация
         </Button>
       </Form.Item>
     </Form>

@@ -1,16 +1,16 @@
-import React, { useState } from "react";
+import React, { FC, useState } from "react";
 import { Form, Input, Button } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
-import { toast } from "react-toastify";
-import { loginUser } from "../authService";
+import { useNavigate } from "react-router-dom";
+import { loginUser } from "../pages/LoginPage/service";
 
 interface LoginProps {
   onLogin: (token: string) => void;
 }
 
-const Login: React.FC<LoginProps> = ({ onLogin }) => {
+const Login: FC<LoginProps> = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
-
+  const navigate = useNavigate();
   const handleSubmit = async ({
     username,
     password,
@@ -20,16 +20,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   }) => {
     setLoading(true);
     try {
-      const token = await loginUser(username, password);
-
-      localStorage.setItem("jwtToken", token);
-      onLogin(token);
-      toast.success("Login successful!", { position: "top-right" });
-    } catch (error: any) {
-      console.error("Login failed:", error.response.data);
-      toast.error(error.response.data, {
-        position: "top-right",
-      });
+      const data = await loginUser(username, password);
+      if (!data) return;
+      onLogin(data?.token);
+      navigate("/courses");
     } finally {
       setLoading(false);
     }
@@ -49,23 +43,17 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           },
         ]}
       >
-        <Input
-          prefix={<UserOutlined className="site-form-item-icon" />}
-          placeholder="Username"
-        />
+        <Input prefix={<UserOutlined />} placeholder="Username" />
       </Form.Item>
       <Form.Item
         name="password"
         rules={[{ required: true, message: "Пожалуйста, введите пароль" }]}
       >
-        <Input.Password
-          prefix={<LockOutlined className="site-form-item-icon" />}
-          placeholder="Password"
-        />
+        <Input.Password prefix={<LockOutlined />} placeholder="Password" />
       </Form.Item>
       <Form.Item>
         <Button type="primary" htmlType="submit" loading={loading}>
-          Login
+          Войти
         </Button>
       </Form.Item>
     </Form>

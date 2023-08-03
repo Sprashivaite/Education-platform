@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Layout, Menu, Button } from "antd";
+import { Layout, Menu } from "antd";
 import {
   HomeOutlined,
   LoginOutlined,
@@ -15,34 +15,28 @@ interface HeaderProps {
 }
 
 const AppHeader: React.FC<HeaderProps> = ({ jwtToken, onLogout }) => {
-  const handleLogout = () => {
-    onLogout();
-  };
-
   return (
     <Header>
       <Menu theme="dark" mode="horizontal" defaultSelectedKeys={["home"]}>
         <Menu.Item key="home" icon={<HomeOutlined />}>
-          <Link to="/">Home</Link>
+          <Link to="/">Главная страница</Link>
         </Menu.Item>
         {jwtToken ? (
           <>
             <Menu.Item key="courses">
-              <Link to="/courses">Courses</Link>
+              <Link to="/courses">Курсы</Link>
             </Menu.Item>
-            <Menu.Item key="logout">
-              <Button type="primary" onClick={handleLogout}>
-                Logout
-              </Button>
+            <Menu.Item key="logout" onClick={onLogout}>
+              Выход из системы
             </Menu.Item>
           </>
         ) : (
           <>
             <Menu.Item key="login" icon={<LoginOutlined />}>
-              <Link to="/login">Login</Link>
+              <Link to="/login">Вход в систему</Link>
             </Menu.Item>
             <Menu.Item key="register" icon={<UserAddOutlined />}>
-              <Link to="/register">Register</Link>
+              <Link to="/register">Регистрация</Link>
             </Menu.Item>
           </>
         )}

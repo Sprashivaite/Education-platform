@@ -1,11 +1,12 @@
 import React from "react";
 import { PageHeader } from "antd";
-import RegisterForm from "../components/RegisterForm";
+import RegisterForm from "../../components/RegisterForm";
+import "./style.css";
 
 const RegistrationPage: React.FC = () => {
   return (
-    <div>
-      <PageHeader title="Registration Page" />
+    <div className="regPage">
+      <PageHeader title="Страница регистрации" />
       <RegisterForm />
     </div>
   );

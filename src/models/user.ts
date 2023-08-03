@@ -1,13 +1,13 @@
-import mongoose, { Schema, Model } from "mongoose";
+import { Schema, Model, Document, model } from "mongoose";
 import bcrypt from "bcrypt";
-import { MongooseCallback } from "../interfaces/mongoose";
+import { MongooseCallback } from "../types/express";
 
-interface IUser extends mongoose.Document {
+interface IUser extends Document {
   username: string;
   password: string;
 }
 
-const userSchema: Schema<IUser> = new mongoose.Schema({
+const userSchema: Schema<IUser> = new Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
 });
@@ -23,12 +23,12 @@ userSchema.pre(
       const hashedPassword = await bcrypt.hash(this.password, 10);
       this.password = hashedPassword;
       next(null);
-    } catch (err: any) {
-      next(err);
+    } catch (error: any) {
+      next(error);
     }
   }
 );
 
-const User: Model<IUser> = mongoose.model<IUser>("User", userSchema);
+const User: Model<IUser> = model<IUser>("User", userSchema);
 
 export default User;

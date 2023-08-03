@@ -1,33 +1,29 @@
 import express from "express";
 import path from "path";
-import { fileURLToPath } from "url";
+import cors from "cors";
+
 import router from "./routes/auth.js";
 import { connectDB } from "./db/connectDB.js";
-import cors from "cors";
 import courseRoutes from "./routes/courseRoutes.js";
 import classRoutes from "./routes/classRoutes.js";
-
-const app = express();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const publicPath = path.join(__dirname, "client", "build");
-app.use(express.static(publicPath));
-
-app.use(cors());
+import userRoutes from "./routes/userRoutes.js";
+import { publicPath } from "./utils.js";
+import { port } from "./consts.js";
 
 connectDB();
 
-app.get("/", (_, res) => {
-  res.sendFile(path.join(publicPath, "index.html"));
+const app = express();
+app.use(express.static(publicPath)).use(cors()).use(express.json());
+
+app
+  .use("/auth", router)
+  .use("/api/users", userRoutes)
+  .use("/api/courses", courseRoutes)
+  .use("/api/classes", classRoutes);
+
+app.get("/", (_, response) => {
+  response.sendFile(path.join(publicPath, "index.html"));
 });
-app.use(express.json());
-
-app.use("/auth", router);
-app.use("/api/courses", courseRoutes);
-app.use("/api/courses", classRoutes);
-
-const port = process.env.PORT || 3000;
 
 app.listen(port, () => {
   console.log(`Server started on port ${port}`);

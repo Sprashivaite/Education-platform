@@ -1,15 +1,20 @@
-import express, { Request, Response } from "express";
-import Course from "../models/courseModel.js";
+import { Router } from "express";
+import { requireAuth } from "../controllers/userController.js";
+import {
+  getCourses,
+  getCourseById,
+  createCourse,
+  updateCourse,
+} from "../controllers/courseController.js";
 
-const router = express.Router();
+const router = Router();
 
-router.get("/", async (_: Request, res: Response) => {
-  try {
-    const courses = await Course.find();
-    res.json(courses);
-  } catch (error) {
-    res.status(500).json({ message: "Ошибка сервера" });
-  }
-});
+router.get("/", getCourses);
+
+router.get("/:id", requireAuth, getCourseById);
+
+router.put("/:id", requireAuth, updateCourse);
+
+router.post("/", createCourse);
 
 export default router;

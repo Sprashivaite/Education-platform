@@ -3,13 +3,15 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { Layout } from "antd";
 import { ToastContainer } from "react-toastify";
 import "antd/dist/antd.css";
+import "react-toastify/dist/ReactToastify.css";
 
-import HomePage from "./pages/Home";
-import LoginPage from "./pages/LoginPage";
-import RegistrationPage from "./pages/RegistrationPage";
-import CoursesPage from "./pages/CoursesPage";
-import ClassPage from "./components/ClassPage";
+import { HomePage } from "./pages/Home";
+import LoginPage from "./pages/LoginPage/LoginPage";
+import RegistrationPage from "./pages/RegistrationPage/RegistrationPage";
+import CoursesPage from "./pages/CoursesPage/CoursesPage";
+import ClassPage from "./pages/ClassPage/ClassPage";
 import AppHeader from "./components/Header";
+import CoursePage from "./pages/CoursePage/CoursePage";
 
 const { Content, Footer } = Layout;
 
@@ -22,6 +24,7 @@ const App: React.FC = () => {
 
   const handleLogout = () => {
     setJwtToken(null);
+    localStorage.removeItem("jwtToken");
   };
 
   useEffect(() => {
@@ -33,9 +36,11 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      <Layout>
+      <Layout style={{ height: "100%" }}>
         <AppHeader jwtToken={jwtToken} onLogout={handleLogout} />
-        <Content style={{ padding: "50px 50px" }}>
+        <Content style={{ padding: "50px 50px", flexShrink: "0" }}>
+          <ToastContainer autoClose={3000} position="top-right" />
+
           <div className="site-layout-content">
             <Routes>
               <Route path="/" element={<HomePage />} />
@@ -44,12 +49,16 @@ const App: React.FC = () => {
                 element={<LoginPage onLogin={handleLogin} />}
               />
               <Route path="/register" element={<RegistrationPage />} />
-              {jwtToken && <Route path="/courses" element={<CoursesPage />} />}
-              <Route path="/class/:classId" element={<ClassPage />} />{" "}
+              {jwtToken && (
+                <>
+                  <Route path="/courses" element={<CoursesPage />} />{" "}
+                  <Route path="/course/:courseId" element={<CoursePage />} />
+                  <Route path="/class/:classId" element={<ClassPage />} />
+                </>
+              )}
             </Routes>
           </div>
         </Content>
-        <ToastContainer autoClose={3000} position="top-right" />
         <Footer style={{ textAlign: "center" }}>
           {new Date().getFullYear()}
         </Footer>
