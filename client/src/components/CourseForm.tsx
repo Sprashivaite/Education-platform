@@ -24,7 +24,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
   return (
     <Modal
       title="Создать курс"
-      visible={visible}
+      open={visible}
       onOk={handleOk}
       onCancel={onCancel}
     >

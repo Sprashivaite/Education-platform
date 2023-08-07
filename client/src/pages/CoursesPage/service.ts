@@ -14,12 +14,17 @@ export const getCourses = async () => {
 };
 
 export const createCourse = async (courseData: CourseData) => {
+  const userId = localStorage.getItem("jwtToken");
   try {
     const response = await axios.post(
       `${SERVER_BASE_URL}/api/courses`,
-      courseData
+      courseData,
+      {
+        headers: {
+          Authorization: `Bearer ${userId}`,
+        },
+      }
     );
-    window.location.reload();
     return response.data;
   } catch (error: any) {
     toast.error(error.response.data.message);
@@ -28,10 +33,10 @@ export const createCourse = async (courseData: CourseData) => {
 
 export const updateCourse = async (
   courseId: string,
-  updatedCourse: Partial<Course>,
-  userId: string
+  updatedCourse: Partial<Course>
 ): Promise<Course | undefined> => {
   try {
+    const userId = localStorage.getItem("jwtToken");
     const response = await axios.put(
       `${SERVER_BASE_URL}/api/courses/${courseId}`,
       updatedCourse,

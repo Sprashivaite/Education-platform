@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { FC, useEffect, useState } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { Layout } from "antd";
 import { ToastContainer } from "react-toastify";
@@ -15,7 +15,7 @@ import CoursePage from "./pages/CoursePage/CoursePage";
 
 const { Content, Footer } = Layout;
 
-const App: React.FC = () => {
+const App: FC = () => {
   const [jwtToken, setJwtToken] = useState<string | null>(null);
 
   const handleLogin = (token: string) => {

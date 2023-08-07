@@ -20,7 +20,10 @@ export const registerUser = async (request: Request, response: Response) => {
 
     await user.save();
 
-    const token = jwt.sign({ userId: user._id }, JWT_SECRET);
+    const token = jwt.sign(
+      { userId: user._id, username: user.username },
+      JWT_SECRET
+    );
 
     response
       .status(201)

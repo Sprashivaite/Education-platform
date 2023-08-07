@@ -22,7 +22,7 @@ const GrantAccessModal: React.FC<Props> = ({
   return (
     <Modal
       title="Предоставление доступа пользователю"
-      visible={visible}
+      open={visible}
       onCancel={onCancel}
       footer={null}
     >

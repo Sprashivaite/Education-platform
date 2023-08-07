@@ -1,18 +1,21 @@
 import { Router } from "express";
-import { requireAuth } from "../controllers/userController.js";
 import {
+  addClassToCourse,
   addComment,
   addLinkToClass,
   addLinkToFile,
   getClass,
   getClasses,
 } from "../controllers/classController.js";
+import { requireAuth } from "../middleware/requireAuth.js";
 
 const router = Router();
 
-router.get("/:courseId/classes", requireAuth, getClasses);
+router.get("/:courseId/classes", getClasses);
 
 router.get("/:id", requireAuth, getClass);
+
+router.post("/:courseId/classes", requireAuth, addClassToCourse);
 
 router.post("/:id/comments", requireAuth, addComment);
 

@@ -103,8 +103,10 @@ export const getClass = async (request: Request, response: Response) => {
     if (!classDetail) {
       return response.status(404).json({ message: "Класс не найден" });
     }
-
-    if (request.userId && classDetail.createdBy.toString() !== request.userId) {
+    if (
+      request.userId &&
+      classDetail.createdBy._id.toString() !== request.userId
+    ) {
       return response.status(403).json({ message: "Доступ запрещен" });
     }
 
@@ -137,19 +139,23 @@ export const addComment = async (request: Request, response: Response) => {
 };
 
 export const addClassToCourse = async (req: Request, res: Response) => {
-  const courseId = req.params.id;
-
+  const courseId = req.params.courseId;
+  // const { title, description, videoUrl } = req.body;
   try {
     const course = await Course.findById(courseId);
     if (!course) {
-      return res.status(404).json({ message: "Course not found" });
+      return res.status(404).json({ message: "Курс не найден" });
     }
 
-    const newClass = new Class(req.body);
+    const newClass = new Class({
+      ...req.body,
+      createdBy: req.userId,
+      courseId,
+    });
     const savedClass = await newClass.save();
 
     const classObjectId = savedClass._id;
-
+    if (course.classes === undefined) course.classes = [];
     if (course.classes.includes(classObjectId)) {
       return res.status(400).json({ message: "Занятие уже добавлено в курс" });
     }

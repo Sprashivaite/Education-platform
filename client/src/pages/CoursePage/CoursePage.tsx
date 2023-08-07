@@ -1,7 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { Course } from "../../components/CourseItem";
-import { getClassesForCourse, getCourseById } from "./service";
+import {
+  addClassToCourse,
+  getClassesForCourse,
+  getCourseById,
+} from "./service";
+import { Button, List } from "antd";
+import CreateClassModal from "../../components/CreateClassModal";
 
 const CoursePage: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
@@ -30,21 +36,55 @@ const CoursePage: React.FC = () => {
       );
   }, [courseId]);
 
+  const [showCreateClassModal, setShowCreateClassModal] = useState(false);
+
+  const handleCreateClass = async (classData: {
+    title: string;
+    description: string;
+    videoUrl: string;
+  }) => {
+    try {
+      if (!courseId) return;
+      const newClass = await addClassToCourse(courseId, classData);
+      if (newClass) {
+        setCourse((prevCourse) => ({
+          ...prevCourse!,
+          classes: [...prevCourse!.classes, newClass],
+        }));
+      }
+
+      setShowCreateClassModal(false);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <div>
       {course ? (
         <div>
           <h2>{course.title}</h2>
           <p>{course.description}</p>
-          <h3>Классы:</h3>
+          <h3>Занятия:</h3>
           <ul>
-            {classes?.map((c) => (
-              <li key={c._id}>
-                <p>{c.title}</p>
-                <p>{c.videoUrl}</p>
-              </li>
-            ))}
+            <List
+              dataSource={classes}
+              renderItem={({ _id, title }) => (
+                <List.Item key={_id}>
+                  <Link to={`/class/${_id}`}>{title}</Link>
+                </List.Item>
+              )}
+            />
           </ul>
+          <Button onClick={() => setShowCreateClassModal(true)}>
+            Добавить занятие
+          </Button>
+
+          <CreateClassModal
+            visible={showCreateClassModal}
+            onCancel={() => setShowCreateClassModal(false)}
+            onCreateClass={handleCreateClass}
+          />
         </div>
       ) : (
         <p>Загрузка деталей курса...</p>

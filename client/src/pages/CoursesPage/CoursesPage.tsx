@@ -12,9 +12,8 @@ const CoursesPage: FC = () => {
   }, []);
 
   const [visible, setVisible] = useState(false);
-  const createdBy = localStorage.getItem("userId");
   const handleCreateCourse = (values: any) => {
-    createCourse({ ...values, createdBy });
+    createCourse({ ...values });
     setVisible(false);
   };
 
@@ -27,8 +26,7 @@ const CoursesPage: FC = () => {
     updatedCourse: Partial<Course>
   ) => {
     try {
-      const userToken = localStorage.getItem("jwtToken") || "";
-      const response = await updateCourse(courseId, updatedCourse, userToken);
+      const response = await updateCourse(courseId, updatedCourse);
       console.log("Обновление курса:", response);
     } catch (error) {
       console.error("Ошибка при обновлении курса:", error);
