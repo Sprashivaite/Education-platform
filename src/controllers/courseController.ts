@@ -7,6 +7,7 @@ export const getCourses = async (_: Request, response: Response) => {
     const courses = await Course.find();
     response.json(courses);
   } catch (error) {
+    console.log(error.message);
     response.status(500).json({ message: "Ошибка сервера" });
   }
 };
@@ -21,31 +22,34 @@ export const getCourseById = async (
     if (!course) {
       return response.status(404).json({ message: "Курс не найден" });
     }
-    if (request.userId !== course.createdBy.toString()) {
-      return response.status(403).json({
-        message: "Доступ запрещен: Вы не являетесь владельцем этого курса",
-      });
-    }
 
     return response.json(course);
   } catch (error) {
+    console.log(error.message);
     return response.status(500).json({ message: "Ошибка сервера" });
   }
 };
 
-export const createCourse = async (request: Request, response: Response) => {
+export const createCourse = async (
+  request: AuthenticatedRequest,
+  response: Response
+) => {
   try {
-    const { title, description, createdBy } = request.body;
+    const { title, description } = request.body;
     const newCourseData: ICourse = {
       title,
       description,
-      createdBy,
+      createdBy: {
+        _id: request.userId,
+        username: request.username,
+      },
     };
 
     const newCourse = new Course(newCourseData);
     const savedCourse = await newCourse.save();
     response.status(201).json(savedCourse);
   } catch (error) {
+    console.log(error.message);
     response.status(500).json({ message: "Ошибка сервера" });
   }
 };
@@ -67,6 +71,7 @@ export const updateCourse = async (request: Request, response: Response) => {
 
     return response.json(updatedCourse);
   } catch (error) {
+    console.log(error.message);
     return response.status(500).json({ message: "Ошибка сервера" });
   }
 };

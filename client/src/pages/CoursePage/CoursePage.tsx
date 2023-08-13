@@ -41,7 +41,6 @@ const CoursePage: React.FC = () => {
   const handleCreateClass = async (classData: {
     title: string;
     description: string;
-    videoUrl: string;
   }) => {
     try {
       if (!courseId) return;

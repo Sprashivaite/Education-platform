@@ -58,7 +58,6 @@ export const addClassToCourse = async (
   classData: {
     title: string;
     description: string;
-    videoUrl: string;
   }
 ) => {
   try {

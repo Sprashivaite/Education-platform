@@ -7,6 +7,6 @@ const router = express.Router();
 
 router.get("/", requireAuth, getUsers);
 
-router.post("/:userId/grant-access/:classId", grantAccessToClass);
+router.post("/:userId/grant-access/:classId", requireAuth, grantAccessToClass);
 
 export default router;

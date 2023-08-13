@@ -21,6 +21,8 @@ export const requireAuth = (
     next();
   } catch (error) {
     console.log(error);
-    next();
+    return response
+      .status(401)
+      .json({ message: "Сессия истекла. Пожалуйста авторизуйтесь" });
   }
 };

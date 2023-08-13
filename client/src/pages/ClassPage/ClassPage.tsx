@@ -1,19 +1,26 @@
-import React, { useEffect, useState } from "react";
+import React, { FC, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Button, Card, Input, Typography, Modal, Form, Row, Col } from "antd";
+import { Button, Card, Input, Typography, Upload } from "antd";
 import GrantAccessModal from "../../components/GrantAccessModal";
 import {
   getClassById,
   addClassComment,
-  addLinkToFile,
   grantAccessToClass,
+  updateClass,
+  addLinkToClass,
+  addFile,
 } from "./service";
+import EditClassModal from "../../components/EditClassModal";
+import UsefulLinkModal from "../../components/UsefulLinkModal";
+import SERVER_BASE_URL from "../../config";
+import { UploadOutlined } from "@ant-design/icons";
 
 export interface Class {
   _id: string;
   title: string;
   description: string;
   videoUrl: string;
+  videoPath: string;
   courseId: string;
   comments: { text: string }[];
   usefulLinks: [
@@ -23,17 +30,15 @@ export interface Class {
       isFile: boolean;
     }
   ];
+  files: string[];
 }
 
 const { Title, Text } = Typography;
-const { confirm } = Modal;
 
-const ClassPage: React.FC = () => {
+const ClassPage: FC = () => {
   const { classId } = useParams<{ classId: string }>();
   const [classData, setClassData] = useState<Class | null>(null);
   const [commentText, setCommentText] = useState("");
-  const [newLinkTitle, setNewLinkTitle] = useState("");
-  const [newLinkUrl, setNewLinkUrl] = useState("");
   const [showGrantAccessModal, setShowGrantAccessModal] = useState(false);
 
   useEffect(() => {
@@ -62,32 +67,52 @@ const ClassPage: React.FC = () => {
     }
   };
 
-  const handleAddFileLink = async () => {
-    try {
-      if (!classId) return;
-      await addLinkToFile(classId, newLinkTitle, newLinkUrl);
-      setNewLinkTitle("");
-      setNewLinkUrl("");
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   const handleGrantAccess = async (userId: string) => {
     try {
       if (!classId) return;
-      await grantAccessToClass(classId, userId);
+      await grantAccessToClass(userId, classId);
     } catch (error) {
       console.error(error);
     }
   };
 
   const showGrantAccessConfirmation = () => {
-    confirm({
-      title: "Предоставление доступа",
-      content: "Хотите ли вы предоставить доступ к этому классу?",
-      onOk: () => setShowGrantAccessModal(true),
-    });
+    setShowGrantAccessModal(true);
+  };
+
+  const handleUpdate = async (editedClass: Class) => {
+    if (!classId) return;
+    await updateClass(classId, editedClass);
+  };
+
+  const [showEditClassModal, setShowEditClassModal] = useState(false);
+  const handleEditClass = () => {
+    setShowEditClassModal(true);
+  };
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const handleAddLink = async (title: string, url: string) => {
+    try {
+      if (!classId) return;
+      await addLinkToClass(classId, title, url);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const videoUrl = `${SERVER_BASE_URL}/api/classes/getVideo/${classData?.videoPath}`;
+
+  const [uploading, setUploading] = useState(false);
+
+  const beforeUpload = (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    if (!classId) return;
+
+    setUploading(true);
+    addFile(classId, formData);
+
+    setUploading(false);
+    return false;
   };
 
   if (!classData) return null;
@@ -95,85 +120,115 @@ const ClassPage: React.FC = () => {
   return (
     <div>
       <Card title={classData.title}>
-        <Text>{classData.description}</Text>
-        <Title level={5}>Видео:</Title>
-        <iframe
-          title={classData.title}
-          width="100%"
-          height="315"
-          src={classData.videoUrl}
-          allowFullScreen
-        ></iframe>
-        <ul>
-          {classData.comments.map((comment, index) => (
-            <li key={index}>{comment.text}</li>
-          ))}
-        </ul>
-        <div>
-          <Input
-            type="text"
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
+        {classId && (
+          <EditClassModal
+            classId={classId}
+            visible={showEditClassModal}
+            onCancel={() => setShowEditClassModal(false)}
+            onSubmit={handleUpdate}
+            classToEdit={classData}
           />
-          <Button onClick={handleAddComment}>Добавить комментарий</Button>
+        )}
+        <GrantAccessModal
+          visible={showGrantAccessModal}
+          onCancel={() => setShowGrantAccessModal(false)}
+          onGrantAccess={handleGrantAccess}
+        />
+
+        <div style={{ display: "flex", gap: "12px", marginBottom: "20px" }}>
+          <Button style={{ display: "block" }} onClick={handleEditClass}>
+            Редактировать занятие
+          </Button>
+          <Button onClick={showGrantAccessConfirmation}>
+            Предоставление доступа
+          </Button>
         </div>
-        <div>
-          <h3>Полезные ссылки:</h3>
-          {classData.usefulLinks.map((link, index) => (
-            <div key={index}>
-              <a href={link.url} target="_blank" rel="noopener noreferrer">
-                {link.title}
-              </a>
-              {link.isFile && (
-                <iframe
-                  title={link.title}
-                  width="100%"
-                  height="315"
-                  src={link.url}
-                  allowFullScreen
-                ></iframe>
-              )}
+        <div style={{ marginBottom: "20px" }}>
+          <Text strong>{classData.description}</Text>
+        </div>
+        <Title level={5}>Видео:</Title>
+        <video width="560" height="315" controls>
+          <source src={videoUrl} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+        <div style={{ display: "flex", gap: "100px" }}>
+          <div>
+            <h3>Комментарии:</h3>
+            <ul style={{ border: "1px solid #d5d5d5", padding: "10px 40px" }}>
+              {classData.comments.map((comment, index) => (
+                <li key={index}>{comment.text}</li>
+              ))}
+            </ul>
+            <div>
+              <Input
+                type="text"
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+              />
+              <Button onClick={handleAddComment}>Добавить комментарий</Button>
             </div>
-          ))}
-        </div>
-        {/* {classData.createdBy === "currentUserId" && (
-          <Button onClick={showGrantAccessConfirmation}>Предоставление доступа</Button>
-        )} */}
-        <div>
-          <Form>
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item label="Link Title">
-                  <Input
-                    value={newLinkTitle}
-                    onChange={(e) => setNewLinkTitle(e.target.value)}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item label="Link URL">
-                  <Input
-                    value={newLinkUrl}
-                    onChange={(e) => setNewLinkUrl(e.target.value)}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={24}>
-                <Form.Item>
-                  <Button onClick={handleAddFileLink}>
-                    Добавить ссылку на файл
-                  </Button>
-                </Form.Item>
-              </Col>
-            </Row>
-          </Form>
+          </div>
+          <div>
+            <h3>Полезные ссылки:</h3>
+            <Button onClick={() => setShowLinkModal(true)}>
+              Добавить полезную ссылку
+            </Button>
+
+            <div>
+              <ul style={{ border: "1px solid #d5d5d5", padding: "10px 40px" }}>
+                {classData.usefulLinks.map(({ title, url }) =>
+                  title ? (
+                    <li key={url}>
+                      <a key={url} href={url}>
+                        {title}
+                      </a>
+                    </li>
+                  ) : null
+                )}
+              </ul>
+            </div>
+            <UsefulLinkModal
+              visible={showLinkModal}
+              onCancel={() => setShowLinkModal(false)}
+              onAddLink={handleAddLink}
+            />
+          </div>
+          <div>
+            <h3>Полезные файлы:</h3>
+            <Upload fileList={[]} beforeUpload={beforeUpload}>
+              {uploading ? (
+                "Загрузка..."
+              ) : (
+                <Button icon={<UploadOutlined />} disabled={uploading}>
+                  Выберите файл
+                </Button>
+              )}
+            </Upload>
+
+            <div>
+              <ul style={{ border: "1px solid #d5d5d5", padding: "10px 40px" }}>
+                {classData.files.map((item) =>
+                  item ? (
+                    <li key={item}>
+                      <a
+                        key={item}
+                        href={`${SERVER_BASE_URL}/api/classes/${classId}/${item}`}
+                      >
+                        {item}
+                      </a>
+                    </li>
+                  ) : null
+                )}
+              </ul>
+            </div>
+            <UsefulLinkModal
+              visible={showLinkModal}
+              onCancel={() => setShowLinkModal(false)}
+              onAddLink={handleAddLink}
+            />
+          </div>
         </div>
       </Card>
-      <GrantAccessModal
-        visible={showGrantAccessModal}
-        onCancel={() => setShowGrantAccessModal(false)}
-        onGrantAccess={handleGrantAccess}
-      />
     </div>
   );
 };

@@ -1,14 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { Modal, Form, Input, Button } from "antd";
+import { addVideo } from "../pages/ClassPage/service";
 
 interface CreateClassModalProps {
   visible: boolean;
   onCancel: () => void;
-  onCreateClass: (classData: {
-    title: string;
-    description: string;
-    videoUrl: string;
-  }) => void;
+  onCreateClass: (classData: { title: string; description: string }) => void;
 }
 
 const CreateClassModal: React.FC<CreateClassModalProps> = ({
@@ -45,7 +42,7 @@ const CreateClassModal: React.FC<CreateClassModalProps> = ({
       <Form form={form}>
         <Form.Item
           name="title"
-          label="Title"
+          label="Название"
           rules={[
             { required: true, message: "Пожалуйста, введите название занятия" },
           ]}
@@ -54,7 +51,7 @@ const CreateClassModal: React.FC<CreateClassModalProps> = ({
         </Form.Item>
         <Form.Item
           name="description"
-          label="Description"
+          label="Описание"
           rules={[
             {
               required: true,
@@ -63,19 +60,6 @@ const CreateClassModal: React.FC<CreateClassModalProps> = ({
           ]}
         >
           <Input.TextArea />
-        </Form.Item>
-        <Form.Item
-          name="videoUrl"
-          label="Video URL"
-          rules={[
-            {
-              required: true,
-              message: "Пожалуйста, введите URL-адрес видеозаписи занятия",
-            },
-            { type: "url", message: "Пожалуйста, введите действительный URL" },
-          ]}
-        >
-          <Input />
         </Form.Item>
       </Form>
     </Modal>
