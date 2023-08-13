@@ -6,8 +6,7 @@
   "type": "module",
   "scripts": {
     "server": "nodemon --exec ts-node-esm src/app.ts",
-    "client": "cd client && npm start",
-    "start": "server && client"
+    "client": "cd client && npm start"
   },
   "author": "Arkadiy Telitsyn",
   "license": "ISC",
