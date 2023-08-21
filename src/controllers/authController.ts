@@ -1,18 +1,24 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import User from "../models/user.js";
-import { JWT_SECRET } from "../consts.js";
+import { env } from "../envalid.js";
+import httpStatus from "http-status-codes";
+import { ErrorMessages } from "../types/errorMap.js";
 
-export const registerUser = async (request: Request, response: Response) => {
+export const registerUser = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
   const { username, password } = request.body;
 
   try {
     const existingUser = await User.findOne({ username });
 
     if (existingUser) {
-      return response.status(409).json({
-        message: "Пользователь с таким именем уже существует",
+      return response.status(httpStatus.CONFLICT).json({
+        message: ErrorMessages.UserConflict,
       });
     }
 
@@ -22,24 +28,29 @@ export const registerUser = async (request: Request, response: Response) => {
 
     const token = jwt.sign(
       { userId: user._id, username: user.username },
-      JWT_SECRET
+      env.JWT_SECRET
     );
 
     response
-      .status(201)
+      .status(httpStatus.CREATED)
       .json({ token, user: { id: user._id, username: user.username } });
   } catch (error) {
-    console.error(error);
-    response.status(500).json({ message: "Внутренняя ошибка сервера" });
+    next(error);
   }
 };
 
-export const loginUser = async (request: Request, response: Response) => {
+export const loginUser = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
   const { username, password } = request.body;
   try {
     const user = await User.findOne({ username });
     if (!user) {
-      return response.status(404).json({ message: "Пользователь не найден" });
+      return response
+        .status(httpStatus.NOT_FOUND)
+        .json({ message: ErrorMessages.UserNotFound });
     }
 
     const userId = user._id;
@@ -47,16 +58,17 @@ export const loginUser = async (request: Request, response: Response) => {
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      return response.status(401).json({ message: "Неверные пароль" });
+      return response
+        .status(httpStatus.UNAUTHORIZED)
+        .json({ message: ErrorMessages.InvalidPassword });
     }
 
-    const token = jwt.sign({ userId }, JWT_SECRET, {
-      expiresIn: "1h",
+    const token = jwt.sign({ userId }, env.JWT_SECRET, {
+      expiresIn: env.EXPIRES_IN,
     });
 
-    response.status(200).json({ token, userId });
+    response.status(httpStatus.OK).json({ token, userId });
   } catch (error) {
-    console.error(error);
-    response.status(500).json({ message: "Ошибка регистрации в журнале" });
+    next(error);
   }
 };

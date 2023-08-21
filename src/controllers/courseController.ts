@@ -1,38 +1,45 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
+import httpStatus from "http-status-codes";
 import Course, { ICourse } from "../models/courseModel.js";
-import { AuthenticatedRequest } from "../types/express.js";
+import { ErrorMessages } from "../types/errorMap.js";
 
-export const getCourses = async (_: Request, response: Response) => {
+export const getCourses = async (
+  _: Request,
+  response: Response,
+  next: NextFunction
+) => {
   try {
     const courses = await Course.find();
     response.json(courses);
   } catch (error) {
-    console.log(error.message);
-    response.status(500).json({ message: "Ошибка сервера" });
+    next(error);
   }
 };
 
 export const getCourseById = async (
-  request: AuthenticatedRequest,
-  response: Response
+  request: Request,
+  response: Response,
+  next: NextFunction
 ) => {
   const courseId = request.params.id;
   try {
     const course = await Course.findById(courseId);
     if (!course) {
-      return response.status(404).json({ message: "Курс не найден" });
+      return response
+        .status(httpStatus.NOT_FOUND)
+        .json({ message: ErrorMessages.CourseNotFound });
     }
 
     return response.json(course);
   } catch (error) {
-    console.log(error.message);
-    return response.status(500).json({ message: "Ошибка сервера" });
+    next(error);
   }
 };
 
 export const createCourse = async (
-  request: AuthenticatedRequest,
-  response: Response
+  request: Request,
+  response: Response,
+  next: NextFunction
 ) => {
   try {
     const { title, description } = request.body;
@@ -47,14 +54,17 @@ export const createCourse = async (
 
     const newCourse = new Course(newCourseData);
     const savedCourse = await newCourse.save();
-    response.status(201).json(savedCourse);
+    response.status(httpStatus.CREATED).json(savedCourse);
   } catch (error) {
-    console.log(error.message);
-    response.status(500).json({ message: "Ошибка сервера" });
+    next(error);
   }
 };
 
-export const updateCourse = async (request: Request, response: Response) => {
+export const updateCourse = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
   const courseId = request.params.id;
   const { title, description } = request.body;
 
@@ -66,12 +76,13 @@ export const updateCourse = async (request: Request, response: Response) => {
     );
 
     if (!updatedCourse) {
-      return response.status(404).json({ message: "Курс не найден" });
+      return response
+        .status(httpStatus.NOT_FOUND)
+        .json({ message: ErrorMessages.CourseNotFound });
     }
 
     return response.json(updatedCourse);
   } catch (error) {
-    console.log(error.message);
-    return response.status(500).json({ message: "Ошибка сервера" });
+    next(error);
   }
 };

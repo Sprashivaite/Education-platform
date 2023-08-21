@@ -7,7 +7,9 @@ import { connectDB } from "./db/connectDB.js";
 import courseRoutes from "./routes/courseRoutes.js";
 import classRoutes from "./routes/classRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
-import { port, publicPath } from "./consts.js";
+import { publicPath } from "./consts.js";
+import { env } from "./envalid.js";
+import { errorHandlerMiddleware } from "./middleware/errorHandler.js";
 
 connectDB();
 
@@ -22,6 +24,7 @@ express()
   .use("/api/users", userRoutes)
   .use("/api/courses", courseRoutes)
   .use("/api/classes", classRoutes)
-  .listen(port, () => {
-    console.log(`Server started on port ${port}`);
+  .use(errorHandlerMiddleware)
+  .listen(env.PORT || 3001, () => {
+    console.log(`Server started on port ${env.PORT || 3001}`);
   });

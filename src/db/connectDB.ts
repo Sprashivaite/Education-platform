@@ -1,8 +1,7 @@
 import mongoose from "mongoose";
+import { env } from "../envalid.js";
 
-const username = "arkandos";
-const password = "JU9KeV2zPbEV13HA";
-const mongoURI = `mongodb+srv://${username}:${password}@cluster0.g8epamr.mongodb.net/?retryWrites=true&w=majority`;
+const mongoURI = `mongodb+srv://${env.USER}:${env.PASSWORD}@cluster0.g8epamr.mongodb.net/?retryWrites=true&w=majority`;
 
 export async function connectDB() {
   try {

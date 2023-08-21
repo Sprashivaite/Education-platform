@@ -9,14 +9,14 @@ const router = express.Router();
 //     try {
 //       const user = await UserModel.findById(userId);
 //       if (!user) {
-//         return res.status(404).json({ message: "User not found" });
+//         return res.status(httpStatus.NOT_FOUND).json({ message: "User not found" });
 //       }
 //       user.grantedClassAccess.push(classId);
 //       const updatedUser = await user.save();
 //       return res.json(updatedUser);
 //     } catch (error) {
 //       return res
-//         .status(500)
+//         .status(httpStatus.INTERNAL_SERVER_ERROR)
 //         .json({ message: "Error granting access to the class for the user" });
 //     }
 //   }
