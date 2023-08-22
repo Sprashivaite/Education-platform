@@ -6,6 +6,7 @@ import {
   updateCourse,
 } from "../controllers/courseController.js";
 import { requireAuth } from "../middleware/requireAuth.js";
+import { validateCreateCourse } from "../validations/validateCourse.js";
 
 const router = Router();
 
@@ -13,8 +14,8 @@ router.get("/", getCourses);
 
 router.get("/:id", getCourseById);
 
-router.put("/:id", requireAuth, updateCourse);
+router.put("/:id", requireAuth, validateCreateCourse, updateCourse);
 
-router.post("/", requireAuth, createCourse);
+router.post("/", requireAuth, validateCreateCourse, createCourse);
 
 export default router;

@@ -10,9 +10,9 @@ const logger = winston.createLogger({
 });
 
 export const errorHandlerMiddleware = (
-  error,
   _: Request,
-  response: Response
+  response: Response,
+  error
 ) => {
   logger.error(error);
   response

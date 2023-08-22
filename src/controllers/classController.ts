@@ -6,50 +6,7 @@ import path from "path";
 import fs from "fs";
 import httpStatus from "http-status-codes";
 import { ErrorMessages } from "../types/errorMap.js";
-
-export const grantAccessToClass = async (
-  request: Request,
-  response: Response,
-  next: NextFunction
-) => {
-  const { classId, userId } = request.params;
-
-  try {
-    const user = await User.findById(userId);
-    const classItem = await Class.findById(classId);
-
-    if (
-      request.userId &&
-      classItem.createdBy._id.toString() !== request.userId
-    ) {
-      return response
-        .status(httpStatus.FORBIDDEN)
-        .json({ message: ErrorMessages.AccessForbidden });
-    }
-
-    if (!user) {
-      return response
-        .status(httpStatus.NOT_FOUND)
-        .json({ message: ErrorMessages.UserNotFound });
-    }
-
-    if (
-      classItem.grantedClassAccess.some(({ _id }) => userId === _id.toString())
-    ) {
-      return response
-        .status(httpStatus.CONFLICT)
-        .json({ message: ErrorMessages.ClassAlreadyAssigned });
-    }
-    classItem.grantedClassAccess.push(userId as any);
-    await classItem.save();
-
-    return response
-      .status(httpStatus.OK)
-      .json({ message: ErrorMessages.AccessGranted });
-  } catch (error) {
-    next(error);
-  }
-};
+import { validationResult } from "express-validator";
 
 export const addLinkToClass = async (
   request: Request,
@@ -98,6 +55,12 @@ export const addLinkToFile = async (
   response: Response,
   next: NextFunction
 ) => {
+  const errors = validationResult(request);
+  if (!errors.isEmpty()) {
+    return response
+      .status(httpStatus.BAD_REQUEST)
+      .json({ errors: errors.array() });
+  }
   const { classId } = request.params;
   const { title, url } = request.body;
 
@@ -182,6 +145,12 @@ export const addComment = async (
   response: Response,
   next: NextFunction
 ) => {
+  const errors = validationResult(request);
+  if (!errors.isEmpty()) {
+    return response
+      .status(httpStatus.BAD_REQUEST)
+      .json({ errors: errors.array() });
+  }
   const classId = request.params.id;
   const { text } = request.body;
   try {
@@ -257,6 +226,12 @@ export const updateClass = async (
   response: Response,
   next: NextFunction
 ) => {
+  const errors = validationResult(request);
+  if (!errors.isEmpty()) {
+    return response
+      .status(httpStatus.BAD_REQUEST)
+      .json({ errors: errors.array() });
+  }
   const classId = request.params.id;
   const { title, description } = request.body;
 

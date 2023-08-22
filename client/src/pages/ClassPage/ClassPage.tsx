@@ -9,6 +9,7 @@ import {
   updateClass,
   addLinkToClass,
   addFile,
+  getVideo,
 } from "./service";
 import EditClassModal from "../../components/EditClassModal";
 import UsefulLinkModal from "../../components/UsefulLinkModal";
@@ -99,8 +100,6 @@ const ClassPage: FC = () => {
     }
   };
 
-  const videoUrl = `${SERVER_BASE_URL}/api/classes/getVideo/${classData?.videoPath}`;
-
   const [uploading, setUploading] = useState(false);
 
   const beforeUpload = (file: File) => {
@@ -114,6 +113,28 @@ const ClassPage: FC = () => {
     setUploading(false);
     return false;
   };
+
+  const [videoUrl, setVideoUrl] = useState("");
+  const [render, setRender] = useState(0);
+
+  useEffect(() => {
+    async function fetchVideoUrl() {
+      try {
+        if (!classData) return;
+
+        const videoObjectUrl = await getVideo(classData?.videoPath);
+
+        if (videoObjectUrl) {
+          setVideoUrl(videoObjectUrl);
+          setRender(+new Date());
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    fetchVideoUrl();
+  }, [classData]);
 
   if (!classData) return null;
 
@@ -147,7 +168,7 @@ const ClassPage: FC = () => {
           <Text strong>{classData.description}</Text>
         </div>
         <Title level={5}>Видео:</Title>
-        <video width="560" height="315" controls>
+        <video width="560" height="315" controls key={render}>
           <source src={videoUrl} type="video/mp4" />
           Your browser does not support the video tag.
         </video>

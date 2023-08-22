@@ -5,12 +5,19 @@ import User from "../models/user.js";
 import { env } from "../envalid.js";
 import httpStatus from "http-status-codes";
 import { ErrorMessages } from "../types/errorMap.js";
+import { validationResult } from "express-validator";
 
 export const registerUser = async (
   request: Request,
   response: Response,
   next: NextFunction
 ) => {
+  const errors = validationResult(request);
+  if (!errors.isEmpty()) {
+    return response
+      .status(httpStatus.BAD_REQUEST)
+      .json({ errors: errors.array() });
+  }
   const { username, password } = request.body;
 
   try {

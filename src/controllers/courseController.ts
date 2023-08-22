@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import httpStatus from "http-status-codes";
 import Course, { ICourse } from "../models/courseModel.js";
 import { ErrorMessages } from "../types/errorMap.js";
+import { validationResult } from "express-validator";
 
 export const getCourses = async (
   _: Request,
@@ -41,6 +42,12 @@ export const createCourse = async (
   response: Response,
   next: NextFunction
 ) => {
+  const errors = validationResult(request);
+  if (!errors.isEmpty()) {
+    return response
+      .status(httpStatus.BAD_REQUEST)
+      .json({ errors: errors.array() });
+  }
   try {
     const { title, description } = request.body;
     const newCourseData: ICourse = {
@@ -65,6 +72,12 @@ export const updateCourse = async (
   response: Response,
   next: NextFunction
 ) => {
+  const errors = validationResult(request);
+  if (!errors.isEmpty()) {
+    return response
+      .status(httpStatus.BAD_REQUEST)
+      .json({ errors: errors.array() });
+  }
   const courseId = request.params.id;
   const { title, description } = request.body;
 
