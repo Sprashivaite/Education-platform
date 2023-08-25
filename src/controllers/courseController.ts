@@ -3,6 +3,7 @@ import httpStatus from "http-status-codes";
 import Course, { ICourse } from "../models/courseModel.js";
 import { ErrorMessages } from "../types/errorMap.js";
 import { validationResult } from "express-validator";
+import { courseRepository } from "../repositories/courceRepository.js";
 
 export const getCourses = async (
   _: Request,
@@ -10,7 +11,7 @@ export const getCourses = async (
   next: NextFunction
 ) => {
   try {
-    const courses = await Course.find();
+    const courses = await courseRepository.findByAll();
     response.json(courses);
   } catch (error) {
     next(error);
@@ -24,7 +25,7 @@ export const getCourseById = async (
 ) => {
   const courseId = request.params.id;
   try {
-    const course = await Course.findById(courseId);
+    const course = await courseRepository.findById(courseId);
     if (!course) {
       return response
         .status(httpStatus.NOT_FOUND)
@@ -59,8 +60,7 @@ export const createCourse = async (
       },
     };
 
-    const newCourse = new Course(newCourseData);
-    const savedCourse = await newCourse.save();
+    const savedCourse = courseRepository.createCourse(newCourseData);
     response.status(httpStatus.CREATED).json(savedCourse);
   } catch (error) {
     next(error);
@@ -82,10 +82,10 @@ export const updateCourse = async (
   const { title, description } = request.body;
 
   try {
-    const updatedCourse = await Course.findByIdAndUpdate(
+    const updatedCourse = await courseRepository.updateCourse(
       courseId,
-      { title, description },
-      { new: true }
+      title,
+      description
     );
 
     if (!updatedCourse) {

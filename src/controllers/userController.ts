@@ -3,6 +3,8 @@ import User from "../models/user.js";
 import Class from "../models/classModel.js";
 import httpStatus from "http-status-codes";
 import { ErrorMessages } from "../types/errorMap.js";
+import { userRepository } from "../repositories/userRepository.js";
+import { classRepository } from "../repositories/classRepository.js";
 
 export const getUsers = async (
   _: Request,
@@ -10,7 +12,7 @@ export const getUsers = async (
   next: NextFunction
 ) => {
   try {
-    const users = await User.find({});
+    const users = await userRepository.findByAll();
     response.json(users);
   } catch (error) {
     next(error);
@@ -25,8 +27,8 @@ export const grantAccessToClass = async (
   const { classId, userId } = request.params;
 
   try {
-    const user = await User.findById(userId);
-    const classItem = await Class.findById(classId);
+    const user = await userRepository.findById(userId);
+    const classItem = await classRepository.findById(classId);
 
     if (
       request.userId &&
@@ -50,8 +52,7 @@ export const grantAccessToClass = async (
         .status(httpStatus.CONFLICT)
         .json({ message: ErrorMessages.ClassAlreadyAssigned });
     }
-    classItem.grantedClassAccess.push(userId as any);
-    await classItem.save();
+    await classRepository.addAccess(classItem, userId);
 
     return response
       .status(httpStatus.OK)

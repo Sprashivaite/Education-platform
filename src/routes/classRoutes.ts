@@ -19,33 +19,61 @@ import {
   validateAddLinkToClass,
   validateCreateClass,
 } from "../validations/validateClass.js";
+import { requireAuthor } from "../middleware/requireAuthor.js";
+import { requireAccess } from "../middleware/requireAccess.js";
 
 const router = Router();
 
 router.get("/:courseId/classes", getClasses);
 
-router.get("/:id", requireAuth, getClass);
+router.get("/:id", requireAuth, requireAccess, getClass);
 
-router.get("/:id/:filename", requireAuth, uploadFile.single("file"), getFile);
+router.get(
+  "/:id/:filename",
+  requireAuth,
+  requireAccess,
+  uploadFile.single("file"),
+  getFile
+);
 
-router.get("/getVideo/:videoFileName", requireAuth, getVideo);
+router.get("/getVideo/:videoFileName", requireAuth, requireAccess, getVideo);
 
 router.post(
   "/:courseId/classes",
   requireAuth,
+  requireAuthor,
   validateCreateClass,
   addClassToCourse
 );
 
-router.post("/:id/video", requireAuth, uploadFile.single("file"), addVideo);
+router.post(
+  "/:id/video",
+  requireAuth,
+  requireAuthor,
+  uploadFile.single("file"),
+  addVideo
+);
 
-router.post("/:id/file", requireAuth, uploadFile.single("file"), addFile);
+router.post(
+  "/:id/file",
+  requireAuth,
+  requireAuthor,
+  uploadFile.single("file"),
+  addFile
+);
 
-router.post("/:id/comments", requireAuth, validateAddComment, addComment);
+router.post(
+  "/:id/comments",
+  requireAuth,
+  requireAccess,
+  validateAddComment,
+  addComment
+);
 
 router.post(
   "/:classId/links",
   requireAuth,
+  requireAuthor,
   validateAddLinkToClass,
   addLinkToClass
 );
@@ -53,10 +81,17 @@ router.post(
 router.post(
   "/:classId/links/files",
   requireAuth,
+  requireAuthor,
   validateAddLinkToClass,
   addLinkToFile
 );
 
-router.put("/:id", requireAuth, validateCreateClass, updateClass);
+router.put(
+  "/:id",
+  requireAuth,
+  requireAuthor,
+  validateCreateClass,
+  updateClass
+);
 
 export default router;

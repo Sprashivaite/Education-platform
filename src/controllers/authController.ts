@@ -6,6 +6,7 @@ import { env } from "../envalid.js";
 import httpStatus from "http-status-codes";
 import { ErrorMessages } from "../types/errorMap.js";
 import { validationResult } from "express-validator";
+import { userRepository } from "../repositories/userRepository.js";
 
 export const registerUser = async (
   request: Request,
@@ -21,17 +22,14 @@ export const registerUser = async (
   const { username, password } = request.body;
 
   try {
-    const existingUser = await User.findOne({ username });
+    const existingUser = await userRepository.findByName(username);
 
     if (existingUser) {
       return response.status(httpStatus.CONFLICT).json({
         message: ErrorMessages.UserConflict,
       });
     }
-
-    const user = new User({ username, password });
-
-    await user.save();
+    const user = await userRepository.addUser(username, password);
 
     const token = jwt.sign(
       { userId: user._id, username: user.username },
@@ -53,7 +51,7 @@ export const loginUser = async (
 ) => {
   const { username, password } = request.body;
   try {
-    const user = await User.findOne({ username });
+    const user = await userRepository.findByName(username);
     if (!user) {
       return response
         .status(httpStatus.NOT_FOUND)

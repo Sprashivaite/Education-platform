@@ -1,41 +1,36 @@
 import { NextFunction, Request, Response } from "express";
 import User from "../models/user.js";
-import Class from "../models/classModel.js";
+import Class, { IClass } from "../models/classModel.js";
 import Course, { ICourse } from "../models/courseModel.js";
 import path from "path";
-import fs from "fs";
+
 import httpStatus from "http-status-codes";
 import { ErrorMessages } from "../types/errorMap.js";
 import { validationResult } from "express-validator";
+import { classRepository } from "../repositories/classRepository.js";
+import { courseRepository } from "../repositories/courceRepository.js";
+import { classService } from "../service/ClassService.js";
 
 export const addLinkToClass = async (
   request: Request,
   response: Response,
   next: NextFunction
 ) => {
-  const { classId } = request.params;
-  const { title, url } = request.body;
-  const newLink = {
-    title,
-    url,
-  };
-
   try {
-    const classCreatedBy = await Class.findById(classId);
-
-    if (
-      request.userId &&
-      classCreatedBy.createdBy._id.toString() !== request.userId
-    ) {
+    const errors = validationResult(request);
+    if (!errors.isEmpty()) {
       return response
-        .status(httpStatus.FORBIDDEN)
-        .json({ message: ErrorMessages.AccessForbidden });
+        .status(httpStatus.BAD_REQUEST)
+        .json({ errors: errors.array() });
     }
-    const updatedClass = await Class.findByIdAndUpdate(
-      classId,
-      { $push: { usefulLinks: newLink } },
-      { new: true }
-    );
+
+    const { classId } = request.params;
+    const { title, url } = request.body;
+    const newLink = {
+      title,
+      url,
+    };
+    const updatedClass = classRepository.addLinkToClass(classId, newLink);
     if (!updatedClass) {
       return response
         .status(httpStatus.NOT_FOUND)
@@ -65,21 +60,7 @@ export const addLinkToFile = async (
   const { title, url } = request.body;
 
   try {
-    const classCreatedBy = await Class.findById(classId);
-
-    if (
-      request.userId &&
-      classCreatedBy.createdBy._id.toString() !== request.userId
-    ) {
-      return response
-        .status(httpStatus.FORBIDDEN)
-        .json({ message: ErrorMessages.AccessForbidden });
-    }
-    const updatedClass = await Class.findByIdAndUpdate(
-      classId,
-      { $push: { usefulLinks: { title, url, isFile: true } } },
-      { new: true }
-    );
+    const updatedClass = classRepository.addLinkToFile(classId, title, url);
 
     if (!updatedClass) {
       return response
@@ -103,7 +84,7 @@ export const getClasses = async (
 ) => {
   const { courseId } = request.params;
   try {
-    const classes = await Class.find({ courseId });
+    const classes = await classRepository.findByAll(courseId);
     response.json(classes);
   } catch (error) {
     next(error);
@@ -117,17 +98,7 @@ export const getClass = async (
 ) => {
   const classId = request.params.id;
   try {
-    const classCreatedBy = await Class.findById(classId);
-
-    if (
-      request.userId &&
-      classCreatedBy.createdBy._id.toString() !== request.userId
-    ) {
-      return response
-        .status(httpStatus.FORBIDDEN)
-        .json({ message: ErrorMessages.AccessForbidden });
-    }
-    const classDetail = await Class.findById(classId);
+    const classDetail = classRepository.findById(classId);
     if (!classDetail) {
       return response
         .status(httpStatus.NOT_FOUND)
@@ -151,17 +122,15 @@ export const addComment = async (
       .status(httpStatus.BAD_REQUEST)
       .json({ errors: errors.array() });
   }
+
   const classId = request.params.id;
   const { text } = request.body;
   try {
-    const classDetail = await Class.findById(classId);
+    const classDetail = await classRepository.findById(classId);
     if (!classDetail) {
       return response
         .status(httpStatus.NOT_FOUND)
         .json({ message: ErrorMessages.ClassNotFound });
-    }
-    if (!classDetail.usefulLinks) {
-      classDetail.usefulLinks = [];
     }
     classDetail.comments.push({
       text,
@@ -183,16 +152,11 @@ export const addClassToCourse = async (
   const courseId = request.params.courseId;
   const { title, description } = request.body;
   try {
-    const course = await Course.findById(courseId);
+    const course = await courseRepository.findById(courseId);
     if (!course) {
       return response
         .status(httpStatus.NOT_FOUND)
         .json({ message: ErrorMessages.CourseNotFound });
-    }
-    if (request.userId && course.createdBy._id.toString() !== request.userId) {
-      return response
-        .status(httpStatus.FORBIDDEN)
-        .json({ message: ErrorMessages.AccessForbidden });
     }
 
     const newClass = new Class({
@@ -236,21 +200,10 @@ export const updateClass = async (
   const { title, description } = request.body;
 
   try {
-    const classCreatedBy = await Class.findById(classId);
-
-    if (
-      request.userId &&
-      classCreatedBy.createdBy._id.toString() !== request.userId
-    ) {
-      return response
-        .status(httpStatus.FORBIDDEN)
-        .json({ message: ErrorMessages.AccessForbidden });
-    }
-
-    const updatedClass = await Class.findByIdAndUpdate(
+    const updatedClass = classRepository.updateClass(
       classId,
-      { title, description },
-      { new: true }
+      title,
+      description
     );
 
     if (!updatedClass) {
@@ -272,26 +225,10 @@ export const addVideo = async (
 ) => {
   try {
     const classId = request.params.id;
-    const classCreatedBy = await Class.findById(classId);
 
-    if (
-      request.userId &&
-      classCreatedBy.createdBy._id.toString() !== request.userId
-    ) {
-      return response
-        .status(httpStatus.FORBIDDEN)
-        .json({ message: ErrorMessages.AccessForbidden });
-    }
-    if (!request.file) {
-      return response
-        .status(httpStatus.BAD_REQUEST)
-        .json({ message: ErrorMessages.FileNotFound });
-    }
-
-    const updatedClass = await Class.findByIdAndUpdate(
+    const updatedClass = classRepository.addVideo(
       classId,
-      { videoPath: request.file.filename },
-      { new: true }
+      request.file.filename
     );
 
     if (!updatedClass) {
@@ -315,18 +252,7 @@ export const getVideo = async (
 ) => {
   try {
     const videoFileName = request.params.videoFileName;
-    const idx = videoFileName.indexOf(".") + 1;
-    const subdirectory = videoFileName.substring(idx);
-
-    const videoPath = path.join("src/files", subdirectory, videoFileName);
-    const stat = fs.statSync(videoPath);
-    const fileSize = stat.size;
-
-    const file = fs.createReadStream(videoPath);
-    const head = {
-      "Content-Length": fileSize,
-      "Content-Type": "video/mp4",
-    };
+    const { file, head } = classService.getVideo(videoFileName);
 
     response.writeHead(httpStatus.OK, head);
     file.pipe(response);
@@ -342,31 +268,15 @@ export const addFile = async (
 ) => {
   try {
     const classId = request.params.id;
-    const classCreatedBy = await Class.findById(classId);
 
-    if (
-      request.userId &&
-      classCreatedBy.createdBy._id.toString() !== request.userId
-    ) {
-      return response
-        .status(httpStatus.FORBIDDEN)
-        .json({ message: ErrorMessages.AccessForbidden });
-    }
     if (!request.file) {
       return response
         .status(httpStatus.BAD_REQUEST)
         .json({ message: ErrorMessages.FileNotFound });
     }
-    if (!request.file) {
-      return response
-        .status(httpStatus.BAD_REQUEST)
-        .json({ message: ErrorMessages.FileNotFound });
-    }
-
-    const updatedClass = await Class.findByIdAndUpdate(
+    const updatedClass = classRepository.addVideo(
       classId,
-      { $push: { files: request.file.filename } },
-      { new: true }
+      request.file.filename
     );
 
     if (!updatedClass) {
@@ -390,10 +300,7 @@ export const getFile = async (
   next: NextFunction
 ) => {
   const filename = request.params.filename;
+  const filePath = classService.getFile(filename);
 
-  const idx = filename.indexOf(".") + 1;
-  const subdirectory = filename.substring(idx);
-
-  const filePath = path.join("src/files", subdirectory, filename);
   response.sendFile(filePath, { root: "." });
 };
