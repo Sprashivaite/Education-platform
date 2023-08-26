@@ -4,7 +4,6 @@ import {
   addComment,
   addFile,
   addLinkToClass,
-  addLinkToFile,
   addVideo,
   getClass,
   getClasses,
@@ -26,28 +25,32 @@ const router = Router();
 
 router.get("/:courseId/classes", getClasses);
 
-router.get("/:id", requireAuth, requireAccess, getClass);
+router.get("/:classId", requireAuth, requireAccess, getClass);
 
 router.get(
-  "/:id/:filename",
+  "/:classId/:filename",
   requireAuth,
   requireAccess,
   uploadFile.single("file"),
   getFile
 );
 
-router.get("/getVideo/:videoFileName", requireAuth, requireAccess, getVideo);
+router.get(
+  "/getVideo/:classId/:videoFileName",
+  requireAuth,
+  requireAccess,
+  getVideo
+);
 
 router.post(
   "/:courseId/classes",
   requireAuth,
-  requireAuthor,
   validateCreateClass,
   addClassToCourse
 );
 
 router.post(
-  "/:id/video",
+  "/:classId/video",
   requireAuth,
   requireAuthor,
   uploadFile.single("file"),
@@ -55,7 +58,7 @@ router.post(
 );
 
 router.post(
-  "/:id/file",
+  "/:classId/file",
   requireAuth,
   requireAuthor,
   uploadFile.single("file"),
@@ -63,7 +66,7 @@ router.post(
 );
 
 router.post(
-  "/:id/comments",
+  "/:classId/comments",
   requireAuth,
   requireAccess,
   validateAddComment,
@@ -78,16 +81,8 @@ router.post(
   addLinkToClass
 );
 
-router.post(
-  "/:classId/links/files",
-  requireAuth,
-  requireAuthor,
-  validateAddLinkToClass,
-  addLinkToFile
-);
-
 router.put(
-  "/:id",
+  "/:classId",
   requireAuth,
   requireAuthor,
   validateCreateClass,

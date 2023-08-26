@@ -42,10 +42,11 @@ export const classRepository = {
     );
     return updatedClass;
   },
-  async addLinkToFile(classId: string, title: string, url: string) {
+
+  async addFile(classId: string, filename: string) {
     const updatedClass = await Class.findByIdAndUpdate(
       classId,
-      { $push: { usefulLinks: { title, url, isFile: true } } },
+      { $push: { files: filename } },
       { new: true }
     );
     return updatedClass;

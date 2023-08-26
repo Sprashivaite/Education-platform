@@ -180,12 +180,12 @@ export const addFile = async (classId: string, file: FormData) => {
   }
 };
 
-export const getVideo = async (videoPath: string) => {
+export const getVideo = async (classId: string, videoPath: string) => {
   try {
     const userId = localStorage.getItem("jwtToken");
 
     const response = await axios.get(
-      `${SERVER_BASE_URL}/api/classes/getVideo/${videoPath}`,
+      `${SERVER_BASE_URL}/api/classes/getVideo/${classId}/${videoPath}`,
       {
         headers: {
           Authorization: `Bearer ${userId}`,
@@ -193,11 +193,8 @@ export const getVideo = async (videoPath: string) => {
         responseType: "blob",
       }
     );
-    // const videoBlob = await response?.blob();
-    // const videoObjectUrl = URL.createObjectURL(videoBlob);
     const videoBlob = new Blob([response.data], { type: "video/mp4" });
     const videoObjectUrl = URL.createObjectURL(videoBlob);
-    // setVideoUrl(videoObjectUrl);
     return videoObjectUrl;
   } catch (error: any) {
     toast.error(error.response.data.message);

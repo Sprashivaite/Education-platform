@@ -10,25 +10,26 @@ export const requireAccess = async (
 ) => {
   try {
     const { classId } = request.params;
+
     const classCreatedBy = await classRepository.findById(classId);
+
     if (
       request.userId &&
       classCreatedBy.createdBy._id.toString() === request.userId
     ) {
       next();
-    }
-    if (
+    } else if (
       request.userId &&
       classCreatedBy.grantedClassAccess.some(
         ({ _id }) => String(_id) === request.userId
       )
     ) {
       next();
+    } else {
+      return response
+        .status(httpStatus.FORBIDDEN)
+        .json({ message: ErrorMessages.AccessForbidden });
     }
-
-    return response
-      .status(httpStatus.FORBIDDEN)
-      .json({ message: ErrorMessages.AccessForbidden });
   } catch (error) {
     next(error);
   }

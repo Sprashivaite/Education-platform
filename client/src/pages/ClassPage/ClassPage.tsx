@@ -120,9 +120,11 @@ const ClassPage: FC = () => {
   useEffect(() => {
     async function fetchVideoUrl() {
       try {
-        if (!classData) return;
+        console.log(classData?.videoPath);
+        console.log(classId);
+        if (!classData?.videoPath || !classId) return;
 
-        const videoObjectUrl = await getVideo(classData?.videoPath);
+        const videoObjectUrl = await getVideo(classId, classData?.videoPath);
 
         if (videoObjectUrl) {
           setVideoUrl(videoObjectUrl);
@@ -134,7 +136,7 @@ const ClassPage: FC = () => {
     }
 
     fetchVideoUrl();
-  }, [classData]);
+  }, [classData, classId]);
 
   if (!classData) return null;
 
@@ -176,7 +178,7 @@ const ClassPage: FC = () => {
           <div>
             <h3>Комментарии:</h3>
             <ul style={{ border: "1px solid #d5d5d5", padding: "10px 40px" }}>
-              {classData.comments.map((comment, index) => (
+              {classData.comments?.map((comment, index) => (
                 <li key={index}>{comment.text}</li>
               ))}
             </ul>
@@ -197,7 +199,7 @@ const ClassPage: FC = () => {
 
             <div>
               <ul style={{ border: "1px solid #d5d5d5", padding: "10px 40px" }}>
-                {classData.usefulLinks.map(({ title, url }) =>
+                {classData.usefulLinks?.map(({ title, url }) =>
                   title ? (
                     <li key={url}>
                       <a key={url} href={url}>
@@ -228,7 +230,7 @@ const ClassPage: FC = () => {
 
             <div>
               <ul style={{ border: "1px solid #d5d5d5", padding: "10px 40px" }}>
-                {classData.files.map((item) =>
+                {classData.files?.map((item) =>
                   item ? (
                     <li key={item}>
                       <a

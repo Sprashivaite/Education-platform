@@ -9,7 +9,7 @@ import { ErrorMessages } from "../types/errorMap.js";
 import { validationResult } from "express-validator";
 import { classRepository } from "../repositories/classRepository.js";
 import { courseRepository } from "../repositories/courceRepository.js";
-import { classService } from "../service/ClassService.js";
+import { classService } from "../service/classService.js";
 
 export const addLinkToClass = async (
   request: Request,
@@ -45,38 +45,6 @@ export const addLinkToClass = async (
   }
 };
 
-export const addLinkToFile = async (
-  request: Request,
-  response: Response,
-  next: NextFunction
-) => {
-  const errors = validationResult(request);
-  if (!errors.isEmpty()) {
-    return response
-      .status(httpStatus.BAD_REQUEST)
-      .json({ errors: errors.array() });
-  }
-  const { classId } = request.params;
-  const { title, url } = request.body;
-
-  try {
-    const updatedClass = classRepository.addLinkToFile(classId, title, url);
-
-    if (!updatedClass) {
-      return response
-        .status(httpStatus.NOT_FOUND)
-        .json({ message: ErrorMessages.ClassNotFound });
-    }
-
-    return response.status(httpStatus.OK).json({
-      message: ErrorMessages.LinkAdded,
-      class: updatedClass,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
 export const getClasses = async (
   request: Request,
   response: Response,
@@ -96,15 +64,14 @@ export const getClass = async (
   response: Response,
   next: NextFunction
 ) => {
-  const classId = request.params.id;
   try {
-    const classDetail = classRepository.findById(classId);
+    const { classId } = request.params;
+    const classDetail = await classRepository.findById(classId);
     if (!classDetail) {
       return response
         .status(httpStatus.NOT_FOUND)
         .json({ message: ErrorMessages.ClassNotFound });
     }
-
     return response.json(classDetail);
   } catch (error) {
     next(error);
@@ -123,7 +90,7 @@ export const addComment = async (
       .json({ errors: errors.array() });
   }
 
-  const classId = request.params.id;
+  const { classId } = request.params;
   const { text } = request.body;
   try {
     const classDetail = await classRepository.findById(classId);
@@ -157,6 +124,11 @@ export const addClassToCourse = async (
       return response
         .status(httpStatus.NOT_FOUND)
         .json({ message: ErrorMessages.CourseNotFound });
+    }
+    if (request.userId && course.createdBy._id.toString() !== request.userId) {
+      return response
+        .status(httpStatus.FORBIDDEN)
+        .json({ message: ErrorMessages.AccessForbidden });
     }
 
     const newClass = new Class({
@@ -224,9 +196,8 @@ export const addVideo = async (
   next: NextFunction
 ) => {
   try {
-    const classId = request.params.id;
-
-    const updatedClass = classRepository.addVideo(
+    const { classId } = request.params;
+    const updatedClass = await classRepository.addVideo(
       classId,
       request.file.filename
     );
@@ -251,9 +222,9 @@ export const getVideo = async (
   next: NextFunction
 ) => {
   try {
-    const videoFileName = request.params.videoFileName;
-    const { file, head } = classService.getVideo(videoFileName);
+    const { videoFileName } = request.params;
 
+    const { file, head } = classService.getVideo(videoFileName);
     response.writeHead(httpStatus.OK, head);
     file.pipe(response);
   } catch (error) {
@@ -267,18 +238,18 @@ export const addFile = async (
   next: NextFunction
 ) => {
   try {
-    const classId = request.params.id;
+    const { classId } = request.params;
+    const { title, url } = request.body;
 
     if (!request.file) {
       return response
         .status(httpStatus.BAD_REQUEST)
         .json({ message: ErrorMessages.FileNotFound });
     }
-    const updatedClass = classRepository.addVideo(
+    const updatedClass = await classRepository.addFile(
       classId,
       request.file.filename
     );
-
     if (!updatedClass) {
       return response
         .status(httpStatus.NOT_FOUND)
@@ -294,11 +265,7 @@ export const addFile = async (
   }
 };
 
-export const getFile = async (
-  request: Request,
-  response: Response,
-  next: NextFunction
-) => {
+export const getFile = async (request: Request, response: Response) => {
   const filename = request.params.filename;
   const filePath = classService.getFile(filename);
 
