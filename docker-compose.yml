@@ -8,4 +8,4 @@ services:
       - "3000:3000"
     volumes:
       - .:/app
-    command: sh -c "npm run server & npm run client"
+    command: sh -c "cd client && npm install && npm run build && cd .. && npm run server & npm run client"
