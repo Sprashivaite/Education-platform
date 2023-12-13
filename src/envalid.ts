@@ -5,7 +5,6 @@ config();
 export const env = envalid.cleanEnv(process.env, {
   EXPIRES_IN: str(),
   JWT_SECRET: str(),
-  USER: str(),
-  PASSWORD: str(),
+  MONGO_URI: str(),
   PORT: num(),
 });

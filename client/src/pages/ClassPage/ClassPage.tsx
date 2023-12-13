@@ -41,20 +41,19 @@ const ClassPage: FC = () => {
   const [classData, setClassData] = useState<Class | null>(null);
   const [commentText, setCommentText] = useState("");
   const [showGrantAccessModal, setShowGrantAccessModal] = useState(false);
-
+  const fetchClass = async () => {
+    try {
+      if (!classId) return;
+      const fetchedClass = await getClassById(classId);
+      if (!fetchedClass) return;
+      setClassData(fetchedClass);
+    } catch (error) {
+      console.error(error);
+    }
+  };
   useEffect(() => {
-    const fetchClass = async () => {
-      try {
-        if (!classId) return;
-        const fetchedClass = await getClassById(classId);
-        if (!fetchedClass) return;
-        setClassData(fetchedClass);
-      } catch (error) {
-        console.error(error);
-      }
-    };
     fetchClass();
-  }, [classId]);
+  }, []);
 
   const handleAddComment = async () => {
     try {
@@ -84,6 +83,7 @@ const ClassPage: FC = () => {
   const handleUpdate = async (editedClass: Class) => {
     if (!classId) return;
     await updateClass(classId, editedClass);
+    fetchClass();
   };
 
   const [showEditClassModal, setShowEditClassModal] = useState(false);
@@ -95,6 +95,7 @@ const ClassPage: FC = () => {
     try {
       if (!classId) return;
       await addLinkToClass(classId, title, url);
+      fetchClass();
     } catch (error) {
       console.error(error);
     }
@@ -109,8 +110,8 @@ const ClassPage: FC = () => {
 
     setUploading(true);
     addFile(classId, formData);
-
     setUploading(false);
+    fetchClass();
     return false;
   };
 
@@ -174,7 +175,7 @@ const ClassPage: FC = () => {
           <source src={videoUrl} type="video/mp4" />
           Your browser does not support the video tag.
         </video>
-        <div style={{ display: "flex", gap: "100px" }}>
+        <div style={{ display: "flex", gap: "100px", marginTop: "50px" }}>
           <div>
             <h3>Комментарии:</h3>
             <ul style={{ border: "1px solid #d5d5d5", padding: "10px 40px" }}>

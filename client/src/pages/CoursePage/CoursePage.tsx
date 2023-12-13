@@ -51,7 +51,7 @@ const CoursePage: React.FC = () => {
           classes: [...prevCourse!.classes, newClass],
         }));
       }
-
+      window.location.reload();
       setShowCreateClassModal(false);
     } catch (error) {
       console.error(error);
