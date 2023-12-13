@@ -1,4 +1,4 @@
-FROM node:14
+FROM node:16.3.0-alpine
 
 WORKDIR /app
 
@@ -9,7 +9,6 @@ RUN npm install
 WORKDIR /app/client
 COPY client/package*.json ./
 RUN npm install
-
 RUN npm run build
 
 WORKDIR /app
