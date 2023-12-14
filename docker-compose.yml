@@ -5,7 +5,6 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "3001:3001"
     volumes:
       - .:/app
-    command: sh -c "cd client && npm install && npm run build && cd .. && npm run server & npm run client"
